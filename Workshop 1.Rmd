@@ -24,8 +24,8 @@ pop <- get_playlist_audio_features("", "37i9dQZF1DWXti3N4Wp5xy?si=e0a5344cb1b545
 
 music <-
   bind_rows(
-    indiepop |> mutate(category = "indiepop"),
-    pop |> mutate(category = "pop")
+    indiepop |> mutate(category = "Indie Pop Playlist"),
+    pop |> mutate(category = "Pop Playlist")
   )
 
 music |>
@@ -33,12 +33,13 @@ music |>
   geom_histogram(binwidth = 0.1) +
   facet_wrap(~category)
 
-music |>
-  ggplot(aes(x = category, y = energy)) +
-  geom_boxplot()
-
+music %>%
+  ggplot(aes(x = energy)) +
+  geom_histogram(binwidth = 0.1, aes(fill = category), color = "black", alpha = 0.7) +  # Adding fill color based on category
+  facet_wrap(~category) +  # Faceting by category
+  labs(x = "Energy", y = "Count") +  # Adding axis labels
+  theme_minimal()  # Applying a minimal theme for better visualization
 ```
 
 ```{r }
 ```
-
