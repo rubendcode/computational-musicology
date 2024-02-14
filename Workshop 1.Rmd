@@ -1,0 +1,44 @@
+---
+title: "Workshop 1"
+output: html_document
+date: "2024-02-14"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+library(tidyverse)
+library(spotifyr)
+
+indiepop <- get_playlist_audio_features("", "37i9dQZF1DWWEcRhUVtL8n?si=8549c3d965e4458c&nd=1&dlsi=7e635eb660464a36")
+
+pop <- get_playlist_audio_features("", "37i9dQZF1DWXti3N4Wp5xy?si=e0a5344cb1b545c5&nd=1&dlsi=61886b9565ee4c74")
+
+music <-
+  bind_rows(
+    indiepop |> mutate(category = "indiepop"),
+    pop |> mutate(category = "pop")
+  )
+
+music |>
+  ggplot(aes(x = energy)) +
+  geom_histogram(binwidth = 0.1) +
+  facet_wrap(~category)
+
+music |>
+  ggplot(aes(x = category, y = energy)) +
+  geom_boxplot()
+
+```
+
+```{r }
+```
+
