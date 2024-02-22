@@ -3,12 +3,38 @@ title: "Corpus Ruben Dijksma"
 output: 
   flexdashboard::flex_dashboard:
     storyboard: true
-    theme: cosmo
+    self_contained: false
+    source: https://github.com/rubendcode/computational-musicology/blob/main/index.Rmd
+    theme:
+      heading_font:
+        google: 
+          family: Rajdhani
+          wght: 700
+      base_font:
+        google: Fira Sans
+      code_font:
+        google: Fira Mono
+      bg: "#FFFFFF"
+      fg: "#212529" 
+      primary: "#2b2bee"
+      secondary: "#39d7b8"
+      success: "#39d7b8"
+      danger: "#fa5577"
+      warning: "#ffb14c"
+      info: "#0cc7f1"
 date: "2024-02-14"
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(tidymodels)
+library(plotly)
+library(heatmaply)
+library(protoclust)
+library(cowplot)
+library(spotifyr)
+library(htmltools)
+knitr::opts_chunk$set(cache = TRUE, cache.lazy = FALSE)
 ```
 
 ### Introduction
@@ -20,10 +46,6 @@ When do we call a pop song an indiepop song? Last month, the famous 2000’s pop
 ### Visualization
 
 ```{r echo=FALSE}
-library(tidyverse)
-library(spotifyr)
-library(plotly)
-library(flexdashboard)
 
 indiepop <- get_playlist_audio_features("", "37i9dQZF1DWWEcRhUVtL8n?si=8549c3d965e4458c&nd=1&dlsi=7e635eb660464a36")
 
@@ -44,6 +66,20 @@ ggplot <- music %>%
 
 ggplotly(ggplot)
 
+
+```
+
+***
+
+For these graphs I used these playlists at the moment.
+
+```{r echo=FALSE}
+library(htmltools)
+
+div(
+  HTML('<iframe src="https://open.spotify.com/embed/playlist/4xnBi0S21rFHhhK0iGHpiS?utm_source=generator" width="100%" height="380" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>')
+)
+```
 ```
 
 ### Conclusion & Discussion
