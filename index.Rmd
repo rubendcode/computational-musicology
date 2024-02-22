@@ -5,6 +5,7 @@ output:
     storyboard: true
     self_contained: false
     source: https://github.com/rubendcode/computational-musicology/blob/main/index.Rmd
+    css: css_file.css
     theme:
       heading_font:
         google: 
@@ -37,53 +38,73 @@ library(htmltools)
 knitr::opts_chunk$set(cache = TRUE, cache.lazy = FALSE)
 ```
 
-### Introduction
 
+### Introduction 
+ 
 When do we call a pop song an indiepop song? Last month, the famous 2000’s pop song ‘Murder on the Dancefloor’ by Sophie Ellis-Bextor has been rediscovered by TikTok after the movie Saltburn came out. The song was covered by ‘indie-pop’ duo Royel Otis. After the cover the song turned into a timeless indiepop song with sounds from the 2010’s. As a musician, myself heavily inspired by the indie-pop style I am more than interested to discover what musical components make a regular pop song differ from an indie-pop song that makes me and many others feel a certain nostalgic way. My corpus is genre-based but I plan to analyze artists, songs, playlists, and charts with this research question. I hope to be able to discover when Spotify recognizes songs within Spotify as ‘indie-pop’, ‘pop’, or maybe in some cases both. I am not sure how deep we can analyze the song's components (chords, scales etc.) or just the metadata around it. I plan to get the tracks from playlists as “Indie Pop”, “Indie Pop Hits” and “Pop Rising” curated by Spotify. As specific tracks I want to look at current “pop” hits such as “Flowers” by Miley Cyrus and “Greedy” by Tate McRae and current “indie pop” hits such as the Murder On The Dancefloor cover by Royel Otis and a classic as Kilby Girl by The Backseat Lovers.
 
+***
 
+This index will show multiple graphs and discussions about the difference in genre.
 
-### Visualization
+### Energy vs Acousticness
 
-```{r echo=FALSE}
+Week 7 assignment:
 
+For the first graphs I made 2 graphs with the energy on the X axis and the acousticness on the Y axis. I used an indie pop and pop party playlist with both graphs showing that indie pop is more acoustic and pop more energetic. These graphs already show an interesting contrast in the genres.
+
+```{r echo=FALSE, out.width = '100%'}
+library(tidyverse)
+library(spotifyr)
+
+# Fetch audio features for playlists
 indiepop <- get_playlist_audio_features("", "37i9dQZF1DWWEcRhUVtL8n?si=8549c3d965e4458c&nd=1&dlsi=7e635eb660464a36")
-
 pop <- get_playlist_audio_features("", "37i9dQZF1DWXti3N4Wp5xy?si=e0a5344cb1b545c5&nd=1&dlsi=61886b9565ee4c74")
 
-music <-
-  bind_rows(
-    indiepop |> mutate(category = "Indie Pop Playlist"),
-    pop |> mutate(category = "Pop Playlist")
-  )
+# Combine playlists into a single data frame
+music <- bind_rows(
+  indiepop %>% mutate(category = "Indie Pop Playlist"),
+  pop %>% mutate(category = "Pop Playlist")
+)
 
-ggplot <- music %>%
-  ggplot(aes(x = energy, y = acousticness)) +  # Specify y variable as well
-  geom_point(aes(color = category), alpha = 0.7) +  # Use geom_point for scatterplot, add color aesthetics for category
-  facet_wrap(~category) +  # Faceting by category
-  labs(x = "Energy", y = "Acousticness") +  # Adding axis labels
-  theme_minimal()  # Ap
+# Create the ggplot object
+ggplot_obj <- ggplot(music, aes(x = energy, y = acousticness)) +
+  geom_point(aes(color = category), alpha = 0.7) +
+  facet_wrap(~category) +
+  labs(x = "Energy", y = "Acousticness") +
+  theme_minimal()
 
-ggplotly(ggplot)
-
+# Render the plot using ggplotly to ensure proper display
+ggplotly(ggplot_obj)
 
 ```
 
 ***
 
-For these graphs I used these playlists at the moment.
+For these graphs I used these playlists at the moment:
 
 ```{r echo=FALSE}
 library(htmltools)
 
 div(
-  HTML('<iframe src="https://open.spotify.com/embed/playlist/4xnBi0S21rFHhhK0iGHpiS?utm_source=generator" width="100%" height="380" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>')
+  HTML('<iframe src="https://open.spotify.com/embed/playlist/37i9dQZF1DWWEcRhUVtL8n?utm_source=generator" width="100%" height="380" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>')
 )
-```
+
+div(
+  HTML('<iframe src="https://open.spotify.com/embed/playlist/37i9dQZF1DWXti3N4Wp5xy?utm_source=generator" width="100%" height="380" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>')
+)
+
 ```
 
-### Conclusion & Discussion
+### Chromagrams Murder On The Dancefloor 
 
+```{r chromagrams, echo=FALSE}
+
+
+```
+
+
+### Conclusion & Discussion 
 
 ```{r }
 ```
