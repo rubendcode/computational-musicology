@@ -23,7 +23,7 @@ output:
       danger: "#fa5577"
       warning: "#ffb14c"
       info: "#0cc7f1"
-date: "2024-02-14"
+date: "2024-02-23"
 ---
 
 ```{r setup, include=FALSE}
@@ -35,6 +35,8 @@ library(protoclust)
 library(cowplot)
 library(spotifyr)
 library(htmltools)
+library(compmus)
+
 knitr::opts_chunk$set(cache = TRUE, cache.lazy = FALSE)
 ```
 
@@ -98,9 +100,51 @@ div(
 
 ### Chromagrams Murder On The Dancefloor 
 
+
 ```{r chromagrams, echo=FALSE}
+royelotis <-
+  get_tidy_audio_analysis("1swz9stsbG1p34SJHJqiww") |>
+  select(segments) |>
+  unnest(segments) |>
+  select(start, duration, pitches)
 
+royelotis |>
+  mutate(pitches = map(pitches, compmus_normalise, "euclidean")) |>
+  compmus_gather_chroma() |> 
+  ggplot(
+    aes(
+      x = start + duration / 2,
+      width = duration,
+      y = pitch_class,
+      fill = value
+    )
+  ) +
+  geom_tile() +
+  labs(title = "Royel Otis Murder On The Dancefloor", x = "Time (s)", y = NULL, fill = "Magnitude") +
+  theme_minimal() +
+  scale_fill_viridis_c()
 
+Sophie <-
+  get_tidy_audio_analysis("4tKGFmENO69tZR9ahgZu48") |>
+  select(segments) |>
+  unnest(segments) |>
+  select(start, duration, pitches)
+
+Sophie |>
+  mutate(pitches = map(pitches, compmus_normalise, "euclidean")) |>
+  compmus_gather_chroma() |> 
+  ggplot(
+    aes(
+      x = start + duration / 2,
+      width = duration,
+      y = pitch_class,
+      fill = value
+    )
+  ) +
+  geom_tile() +
+  labs(title = "Sophie Ellis-Bextor Murder On The Dancefloor", x = "Time (s)", y = NULL, fill = "Magnitude") +
+  theme_minimal() +
+  scale_fill_viridis_c()
 ```
 
 
