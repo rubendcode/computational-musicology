@@ -151,24 +151,26 @@ Sophie <- get_tidy_audio_analysis("4tKGFmENO69tZR9ahgZu48") |>
 
 
 # Arrange the plots in a grid layout with synchronized x-axis scales
-grid <- plot_grid(royelotis, Sophie, ncol = 2, align = "hv", scale = c(1, 1)) # Adjust the relative width here
+grid <- plot_grid(royelotis, Sophie, nrow = 2, align = "hv", scale = c(1, 1)) # Adjust the relative width here
 
 # Display the combined plot
 grid
 
 
 ```
-*** 
 
-The chromagrams show that both tracks are in the same key. 
+
+*** 
+The chromagrams show that both tracks are in the same key. I think it is interesting to see that the E note is really present in the Royel Otis (indie) version and less in the version from Sophie. The C# is being played more (as a harmonic I assume) in the Sophie version. 
+
 
 
 ### Timbre Graphs
 
 ```{r timbres, echo=FALSE}
 
-royelotis <-
-  get_tidy_audio_analysis("5ZLkc5RY1NM4FtGWEd6HOE") |> # Change URI.
+royelotis_timbre <-
+  get_tidy_audio_analysis("1swz9stsbG1p34SJHJqiww") |> # Change URI.
   compmus_align(bars, segments) |>                     # Change `bars`
   select(bars) |>                                      #   in all three
   unnest(bars) |>                                      #   of these lines.
@@ -187,24 +189,88 @@ royelotis <-
       )
   )
 
-royelotis |>
-  compmus_gather_timbre() |>
+royelotis_timbre |>
+  compmus_self_similarity(timbre, "cosine") |> 
   ggplot(
     aes(
-      x = start + duration / 2,
-      width = duration,
-      y = basis,
-      fill = value
+      x = xstart + xduration / 2,
+      width = xduration,
+      y = ystart + yduration / 2,
+      height = yduration,
+      fill = d
     )
   ) +
   geom_tile() +
-  labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
-  scale_fill_viridis_c() +                              
-  theme_classic()
+  labs(title = "Royel Otis Murder On The Dancefloor", x = "Time (s)", y = NULL, fill = "Magnitude") +
+  coord_fixed() +
+  scale_fill_viridis_c(guide = "none") +
+  theme_classic() +
+  labs(x = "", y = "")
 
+
+sophie_timbre <-
+  get_tidy_audio_analysis("4tKGFmENO69tZR9ahgZu48") |> # Change URI.
+  compmus_align(bars, segments) |>                     # Change `bars`
+  select(bars) |>                                      #   in all three
+  unnest(bars) |>                                      #   of these lines.
+  mutate(
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "rms", norm = "euclidean"              # Change summary & norm.
+      )
+  ) |>
+  mutate(
+    timbre =
+      map(segments,
+        compmus_summarise, timbre,
+        method = "rms", norm = "euclidean"              # Change summary & norm.
+      )
+  )
+
+sophie_timbre |>
+  compmus_self_similarity(timbre, "cosine") |> 
+  ggplot(
+    aes(
+      x = xstart + xduration / 2,
+      width = xduration,
+      y = ystart + yduration / 2,
+      height = yduration,
+      fill = d
+    )
+  ) +
+  geom_tile() +
+  labs(title = "Sophie Ellis-Bextor Murder On The Dancefloor", x = "Time (s)", y = NULL, fill = "Magnitude") +
+  coord_fixed() +
+  scale_fill_viridis_c(guide = "none") +
+  theme_classic() +
+  labs(x = "", y = "")
+
+
+library(cowplot)
+
+# Define the dimensions of the plot
+plot_width <- 800
+plot_height <- 600
+
+# Define a theme with plot margin
+theme_with_margin <- theme(
+  plot.margin = margin(5, 5, 5, 5)
+)
+
+# Apply the theme to each plot
+royelotis_timbre <- royelotis_timbre + theme_with_margin
+sophie_timbre <- sophie_timbre + theme_with_margin
+
+# Arrange the timbre graphs in a grid layout
+grid <- plot_grid(royelotis_timbre, sophie_timbre, ncol = 2)
+
+# Display the combined plot
+grid
 ```
 
-
+*** 
+These show that there is 'more' timbre in the original version from Sophie. 
 
 ### Conclusion & Discussion 
 
