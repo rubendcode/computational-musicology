@@ -36,6 +36,8 @@ library(cowplot)
 library(spotifyr)
 library(htmltools)
 library(compmus)
+library(gridExtra)
+library(cowplot)
 
 knitr::opts_chunk$set(cache = TRUE, cache.lazy = FALSE)
 ```
@@ -55,7 +57,7 @@ Week 7 assignment:
 
 For the first graphs I made 2 graphs with the energy on the X axis and the acousticness on the Y axis. I used an indie pop and pop party playlist with both graphs showing that indie pop is more acoustic and pop more energetic. These graphs already show an interesting contrast in the genres.
 
-```{r echo=FALSE, out.width = '100%'}
+```{r echo=FALSE, out.width = '100%', fig.width = 4, fig.height = 6}
 library(tidyverse)
 library(spotifyr)
 
@@ -77,7 +79,10 @@ ggplot_obj <- ggplot(music, aes(x = energy, y = acousticness)) +
   theme_minimal()
 
 # Render the plot using ggplotly to ensure proper display
-ggplotly(ggplot_obj)
+div(
+  ggplotly(ggplot_obj),
+  style = "width: 900px; height: 600px; overflow: scroll;"
+)
 
 ```
 
@@ -89,11 +94,11 @@ For these graphs I used these playlists at the moment:
 library(htmltools)
 
 div(
-  HTML('<iframe src="https://open.spotify.com/embed/playlist/37i9dQZF1DWWEcRhUVtL8n?utm_source=generator" width="100%" height="380" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>')
+  HTML('<iframe src="https://open.spotify.com/embed/playlist/37i9dQZF1DWWEcRhUVtL8n?utm_source=generator" width="100%" height="390" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>')
 )
 
 div(
-  HTML('<iframe src="https://open.spotify.com/embed/playlist/37i9dQZF1DWXti3N4Wp5xy?utm_source=generator" width="100%" height="380" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>')
+  HTML('<iframe src="https://open.spotify.com/embed/playlist/37i9dQZF1DWXti3N4Wp5xy?utm_source=generator" width="100%" height="390" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>')
 )
 
 ```
@@ -102,13 +107,14 @@ div(
 
 
 ```{r chromagrams, echo=FALSE}
-royelotis <-
-  get_tidy_audio_analysis("1swz9stsbG1p34SJHJqiww") |>
+
+
+library(cowplot)
+
+royelotis <- get_tidy_audio_analysis("1swz9stsbG1p34SJHJqiww") |>
   select(segments) |>
   unnest(segments) |>
-  select(start, duration, pitches)
-
-royelotis |>
+  select(start, duration, pitches) |>
   mutate(pitches = map(pitches, compmus_normalise, "euclidean")) |>
   compmus_gather_chroma() |> 
   ggplot(
@@ -124,13 +130,10 @@ royelotis |>
   theme_minimal() +
   scale_fill_viridis_c()
 
-Sophie <-
-  get_tidy_audio_analysis("4tKGFmENO69tZR9ahgZu48") |>
+Sophie <- get_tidy_audio_analysis("4tKGFmENO69tZR9ahgZu48") |>
   select(segments) |>
   unnest(segments) |>
-  select(start, duration, pitches)
-
-Sophie |>
+  select(start, duration, pitches) |>
   mutate(pitches = map(pitches, compmus_normalise, "euclidean")) |>
   compmus_gather_chroma() |> 
   ggplot(
@@ -145,7 +148,62 @@ Sophie |>
   labs(title = "Sophie Ellis-Bextor Murder On The Dancefloor", x = "Time (s)", y = NULL, fill = "Magnitude") +
   theme_minimal() +
   scale_fill_viridis_c()
+
+
+# Arrange the plots in a grid layout with synchronized x-axis scales
+grid <- plot_grid(royelotis, Sophie, ncol = 2, align = "hv", scale = c(1, 1)) # Adjust the relative width here
+
+# Display the combined plot
+grid
+
+
 ```
+*** 
+
+The chromagrams show that both tracks are in the same key. 
+
+
+### Timbre Graphs
+
+```{r timbres, echo=FALSE}
+
+royelotis <-
+  get_tidy_audio_analysis("5ZLkc5RY1NM4FtGWEd6HOE") |> # Change URI.
+  compmus_align(bars, segments) |>                     # Change `bars`
+  select(bars) |>                                      #   in all three
+  unnest(bars) |>                                      #   of these lines.
+  mutate(
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "rms", norm = "euclidean"              # Change summary & norm.
+      )
+  ) |>
+  mutate(
+    timbre =
+      map(segments,
+        compmus_summarise, timbre,
+        method = "rms", norm = "euclidean"              # Change summary & norm.
+      )
+  )
+
+royelotis |>
+  compmus_gather_timbre() |>
+  ggplot(
+    aes(
+      x = start + duration / 2,
+      width = duration,
+      y = basis,
+      fill = value
+    )
+  ) +
+  geom_tile() +
+  labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
+  scale_fill_viridis_c() +                              
+  theme_classic()
+
+```
+
 
 
 ### Conclusion & Discussion 
