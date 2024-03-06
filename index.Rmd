@@ -42,12 +42,11 @@ library(cowplot)
 knitr::opts_chunk$set(cache = TRUE, cache.lazy = FALSE)
 ```
 
+### Introduction
 
-### Introduction 
- 
 When do we call a pop song an indiepop song? Last month, the famous 2000’s pop song ‘Murder on the Dancefloor’ by Sophie Ellis-Bextor has been rediscovered by TikTok after the movie Saltburn came out. The song was covered by ‘indie-pop’ duo Royel Otis. After the cover the song turned into a timeless indiepop song with sounds from the 2010’s. As a musician, myself heavily inspired by the indie-pop style I am more than interested to discover what musical components make a regular pop song differ from an indie-pop song that makes me and many others feel a certain nostalgic way. My corpus is genre-based but I plan to analyze artists, songs, playlists, and charts with this research question. I hope to be able to discover when Spotify recognizes songs within Spotify as ‘indie-pop’, ‘pop’, or maybe in some cases both. I am not sure how deep we can analyze the song's components (chords, scales etc.) or just the metadata around it. I plan to get the tracks from playlists as “Indie Pop”, “Indie Pop Hits” and “Pop Rising” curated by Spotify. As specific tracks I want to look at current “pop” hits such as “Flowers” by Miley Cyrus and “Greedy” by Tate McRae and current “indie pop” hits such as the Murder On The Dancefloor cover by Royel Otis and a classic as Kilby Girl by The Backseat Lovers.
 
-***
+------------------------------------------------------------------------
 
 This index will show multiple graphs and discussions about the difference in genre.
 
@@ -86,7 +85,7 @@ div(
 
 ```
 
-***
+------------------------------------------------------------------------
 
 For these graphs I used these playlists at the moment:
 
@@ -103,8 +102,7 @@ div(
 
 ```
 
-### Chromagrams Murder On The Dancefloor 
-
+### Chromagrams Murder On The Dancefloor
 
 ```{r chromagrams, echo=FALSE}
 
@@ -159,10 +157,9 @@ grid
 
 ```
 
+------------------------------------------------------------------------
 
-*** 
-The chromagrams show that both tracks are in the same key. I think it is interesting to see that the E note is really present in the Royel Otis (indie) version and less in the version from Sophie. The C# is being played more (as a harmonic I assume) in the Sophie version. 
-
+The chromagrams show that both tracks are in the same key. I think it is interesting to see that the E note is really present in the Royel Otis (indie) version and less in the version from Sophie. The C# is being played more (as a harmonic I assume) in the Sophie version.
 
 ### Timbre Graphs
 
@@ -264,10 +261,9 @@ grid <- plot_grid(royelotis_timbre, sophie_timbre, ncol = 2)
 grid
 ```
 
+------------------------------------------------------------------------
 
-*** 
-These show that there is 'more' timbre in the original version from Sophie. 
-
+These show that there is 'more' timbre in the original version from Sophie.
 
 ### Chordograms of Corpus
 
@@ -381,6 +377,8 @@ royel_otis |>
     aes(x = start + duration / 2, width = duration, y = name, fill = d)
   ) +
   geom_tile() +
+    geom_tile() +
+  labs(title = "Chordogram Royel Otis Murder On The Dancefloor", x = "Time (s)", y = NULL, fill = "Magnitude") +
   scale_fill_viridis_c(guide = "none") +
   theme_minimal() +
   labs(x = "Time (s)", y = "")
@@ -408,6 +406,7 @@ sophie |>
     aes(x = start + duration / 2, width = duration, y = name, fill = d)
   ) +
   geom_tile() +
+  labs(title = "Chordogram Sophie Ellis-Bextor Murder On The Dancefloor", x = "Time (s)", y = NULL, fill = "Magnitude") +
   scale_fill_viridis_c(guide = "none") +
   theme_minimal() +
   labs(x = "Time (s)", y = "")
@@ -415,13 +414,16 @@ sophie |>
 
 ```
 
+------------------------------------------------------------------------
+
+The chordogram is not able to recognise the chords in the indiepop song as well as in the pop song.
+
 ### Playlist SD Comparisons
 
 ```{r}
 # Load necessary libraries
 library(dplyr)
 library(ggplot2)
-
 # Define function to fetch playlist audio features and add audio analysis
 get_and_analyze_playlist <- function(playlist_id, playlist_name) {
   playlist_features <- get_playlist_audio_features("thesoundsofspotify", playlist_id) %>%
@@ -451,24 +453,30 @@ summary_comparison <- combined %>%
     sd_duration = sd(duration)
   )
 
-# Visualize the comparison of standard deviation of loudness, tempo, and duration
-ggplot(summary_comparison, aes(x = playlist_name)) +
-  geom_bar(aes(y = sd_loudness, fill = "Loudness"), stat = "identity", alpha = 0.7) +
-  geom_errorbar(aes(ymin = mean_loudness - sd_loudness, ymax = mean_loudness + sd_loudness), width = 0.2) +
-  geom_bar(aes(y = sd_tempo, fill = "Tempo"), stat = "identity", alpha = 0.7) +
-  geom_errorbar(aes(ymin = mean_tempo - sd_tempo, ymax = mean_tempo + sd_tempo), width = 0.2) +
-  geom_bar(aes(y = sd_duration, fill = "Duration"), stat = "identity", alpha = 0.7) +
-  geom_errorbar(aes(ymin = mean_duration - sd_duration, ymax = mean_duration + sd_duration), width = 0.2) +
+# Reshape data to long format for easier plotting
+summary_comparison_long <- summary_comparison %>%
+  pivot_longer(cols = c(mean_loudness, mean_tempo, mean_duration),
+               names_to = "Variable",
+               values_to = "Mean") %>%
+  mutate(SD = ifelse(Variable == "mean_loudness", sd_loudness,
+                     ifelse(Variable == "mean_tempo", sd_tempo, sd_duration)))
+
+# Plot grouped bar chart for comparison
+ggplot(summary_comparison_long, aes(x = playlist_name, y = Mean, fill = Variable)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.9), width = 0.6) +
+  geom_errorbar(aes(ymin = Mean - SD, ymax = Mean + SD), position = position_dodge(width = 0.9), width = 0.2) +
   labs(
     x = "Playlist",
-    y = "Standard Deviation",
-    title = "Comparison of Standard Deviation for Loudness, Tempo, and Duration"
+    y = "Value",
+    title = "Comparison of Mean and Standard Deviation for Loudness, Tempo, and Duration"
   ) +
-  scale_fill_manual(values = c("Loudness" = "skyblue", "Tempo" = "salmon", "Duration" = "lightgreen")) +
+  scale_fill_manual(values = c("mean_loudness" = "skyblue", "mean_tempo" = "salmon", "mean_duration" = "lightgreen")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   guides(fill = guide_legend(title = "Variable"))
 
+
+#Keys of the playlists
 
 # Define function to fetch playlist audio features and add audio analysis
 get_and_analyze_playlist <- function(playlist_id, playlist_name) {
@@ -478,6 +486,7 @@ get_and_analyze_playlist <- function(playlist_id, playlist_name) {
     mutate(playlist_name = playlist_name)
   return(playlist_features)
 }
+
 
 # Function to extract keys from audio features
 extract_keys <- function(audio_features) {
@@ -530,12 +539,9 @@ ggplot(keys_df_long, aes(x = Key, y = Frequency, fill = Playlist)) +
 
 ```
 
-### Conclusion & Discussion 
+
+
+### Conclusion & Discussion
 
 ```{r }
-# Load necessary libraries
-library(dplyr)
-library(ggplot2)
-library(tidyr)
-
 ```
