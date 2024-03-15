@@ -421,127 +421,187 @@ The chordogram is not able to recognise the chords in the indiepop song as well 
 ### Playlist SD Comparisons
 
 ```{r}
+library(ggplot2)
+library(gridExtra)
+
 # Load necessary libraries
 library(dplyr)
-library(ggplot2)
+
 # Define function to fetch playlist audio features and add audio analysis
 get_and_analyze_playlist <- function(playlist_id, playlist_name) {
   playlist_features <- get_playlist_audio_features("thesoundsofspotify", playlist_id) %>%
-    slice(1:30) %>%
+    slice(1:50) %>%
     add_audio_analysis() %>%
     mutate(playlist_name = playlist_name)
   return(playlist_features)
+}
+
+# Function to extract keys and modes from audio features
+extract_keys_and_modes <- function(audio_features) {
+  # Convert integer key values to character key names
+  key_names <- c("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
+  keys <- factor(key_names[audio_features$key])
+  modes <- factor(ifelse(audio_features$mode == 0, "Minor", "Major"))
+  return(list(keys = keys, modes = modes))
 }
 
 # Fetch audio features and analyze playlists for pop and indiepop
 pop <- get_and_analyze_playlist("37i9dQZF1DWXti3N4Wp5xy", "Pop")
 indiepop <- get_and_analyze_playlist("37i9dQZF1DWWEcRhUVtL8n", "Indie Pop")
 
-# Combine playlists into one dataframe
-combined <- bind_rows(pop, indiepop)
+# Extract keys and modes for each playlist
+pop_keys_modes <- extract_keys_and_modes(pop)
+indiepop_keys_modes <- extract_keys_and_modes(indiepop)
 
-# Analyze and compare audio features across the playlists
-# Calculate standard deviation for loudness, tempo, and duration
-summary_comparison <- combined %>%
-  group_by(playlist_name) %>%
-  summarise(
-    mean_loudness = mean(loudness),
-    sd_loudness = sd(loudness),
-    mean_tempo = mean(tempo),
-    sd_tempo = sd(tempo),
-    mean_duration = mean(duration),
-    sd_duration = sd(duration)
-  )
+# Define all 12 possible keys
+all_keys <- factor(c("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"))
 
-# Reshape data to long format for easier plotting
-summary_comparison_long <- summary_comparison %>%
-  pivot_longer(cols = c(mean_loudness, mean_tempo, mean_duration),
-               names_to = "Variable",
-               values_to = "Mean") %>%
-  mutate(SD = ifelse(Variable == "mean_loudness", sd_loudness,
-                     ifelse(Variable == "mean_tempo", sd_tempo, sd_duration)))
+# Make sure both playlists have the same number of keys
+num_keys <- max(length(pop_keys_modes$keys), length(indiepop_keys_modes$keys))
+pop_keys <- rep(pop_keys_modes$keys, length.out = num_keys)
+pop_modes <- rep(pop_keys_modes$modes, length.out = num_keys)
+indiepop_keys <- rep(indiepop_keys_modes$keys, length.out = num_keys)
+indiepop_modes <- rep(indiepop_keys_modes$modes, length.out = num_keys)
 
-# Plot grouped bar chart for comparison
-ggplot(summary_comparison_long, aes(x = playlist_name, y = Mean, fill = Variable)) +
-  geom_bar(stat = "identity", position = position_dodge(width = 0.9), width = 0.6) +
-  geom_errorbar(aes(ymin = Mean - SD, ymax = Mean + SD), position = position_dodge(width = 0.9), width = 0.2) +
-  labs(
-    x = "Playlist",
-    y = "Value",
-    title = "Comparison of Mean and Standard Deviation for Loudness, Tempo, and Duration"
-  ) +
-  scale_fill_manual(values = c("mean_loudness" = "skyblue", "mean_tempo" = "salmon", "mean_duration" = "lightgreen")) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  guides(fill = guide_legend(title = "Variable"))
+# Create data frames for Pop and Indie Pop playlists
+pop_df <- data.frame(Key = factor(pop_keys, levels = all_keys), Mode = pop_modes, Playlist = "Pop")
+indiepop_df <- data.frame(Key = factor(indiepop_keys, levels = all_keys), Mode = indiepop_modes, Playlist = "Indie Pop")
 
+# Combine data frames
+combined_df <- rbind(pop_df, indiepop_df)
 
-#Keys of the playlists
-
-# Define function to fetch playlist audio features and add audio analysis
-get_and_analyze_playlist <- function(playlist_id, playlist_name) {
-  playlist_features <- get_playlist_audio_features("thesoundsofspotify", playlist_id) %>%
-    slice(1:30) %>%
-    add_audio_analysis() %>%
-    mutate(playlist_name = playlist_name)
-  return(playlist_features)
-}
-
-
-# Function to extract keys from audio features
-extract_keys <- function(audio_features) {
-  # Extracting keys (assuming keys are available in the 'key' column)
-  keys <- audio_features$key
-  return(keys)
-}
-
-# Fetch audio features and analyze playlists for pop and indiepop
-indiepop <- get_playlist_audio_features("", "37i9dQZF1DWWEcRhUVtL8n?si=8549c3d965e4458c&nd=1&dlsi=7e635eb660464a36")
-pop <- get_playlist_audio_features("", "37i9dQZF1DWXti3N4Wp5xy?si=e0a5344cb1b545c5&nd=1&dlsi=61886b9565ee4c74")
-# Extract keys for each playlist
-pop_keys <- extract_keys(pop)
-indiepop_keys <- extract_keys(indiepop)
-
-# Calculate frequency of keys for each playlist
-pop_key_freq <- table(pop_keys)
-indiepop_key_freq <- table(indiepop_keys)
-
-# Combine frequency tables into a single dataframe
-keys_df <- data.frame(
-  Key = factor(names(pop_key_freq), levels = names(pop_key_freq)),
-  Pop_Frequency = as.numeric(pop_key_freq),
-  IndiePop_Frequency = as.numeric(indiepop_key_freq)
-)
-
-# Reshape data to long format
-keys_df_long <- keys_df %>%
-  pivot_longer(cols = c(Pop_Frequency, IndiePop_Frequency),
-               names_to = "Playlist",
-               values_to = "Frequency")
-
-# Manually adding a data point with both categories to ensure legend shows up
-keys_df_long <- rbind(keys_df_long, data.frame(Key = levels(keys_df_long$Key)[1], Playlist = "Pop", Frequency = 0),
-                                      data.frame(Key = levels(keys_df_long$Key)[1], Playlist = "Indie Pop", Frequency = 0))
-
-# Plot histogram of keys for different groups
-ggplot(keys_df_long, aes(x = Key, y = Frequency, fill = Playlist)) +
-  geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+# Plot histograms for major keys
+major_df <- combined_df %>% filter(Mode == "Major")
+plot_major <- ggplot(major_df, aes(x = Key, fill = Playlist)) +
+  geom_bar(stat = "count", position = "dodge", width = 0.7) +
   labs(
     x = "Key",
     y = "Frequency",
-    title = "Histogram of Keys for Pop and Indie Pop Playlists"
+    title = "Histogram of Major Keys for Pop and Indie Pop Playlists"
   ) +
-  scale_fill_manual(values = c("Pop" = "skyblue", "Indie Pop" = "salmon"),
-                    guide = guide_legend(title = "Playlist")) +
+  scale_fill_manual(values = c("Pop" = "skyblue", "Indie Pop" = "salmon")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  scale_x_discrete(labels = c("C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Plot histograms for minor keys
+minor_df <- combined_df %>% filter(Mode == "Minor")
+plot_minor <- ggplot(minor_df, aes(x = Key, fill = Playlist)) +
+  geom_bar(stat = "count", position = "dodge", width = 0.7) +
+  labs(
+    x = "Key",
+    y = "Frequency",
+    title = "Histogram of Minor Keys for Pop and Indie Pop Playlists"
+  ) +
+  scale_fill_manual(values = c("Pop" = "skyblue", "Indie Pop" = "salmon")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Assuming combined_df contains the combined data for both playlists
+# Assuming combined_df contains the combined data for both playlists
+
+# Count the number of major and minor keys in each playlist
+major_minor_count_per_playlist <- combined_df %>%
+  group_by(Playlist, Mode) %>%
+  summarise(Count = n()) %>%
+  pivot_wider(names_from = Mode, values_from = Count, values_fill = list(Count = 0))
+
+
+# Arrange plots in a grid
+grid <- grid.arrange(plot_major, plot_minor, ncol = 1)
+
 
 ```
 
+------------------------------------------------------------------------
+The chart for major keys shows that C major (C) is the most frequent key in both pop and indie pop playlists, followed by G major (G) and A major (A). There is a higher frequency of major keys in both pop and indie pop playlists compared to minor keys.
 
+The chart for minor keys shows that A minor (Am) is the most frequent key in both pop and indie pop playlists, followed by G minor (Gm) and Em minor (Em). Overall, the data suggests that major keys are more common in both pop and indie pop playlists than minor keys. This aligns with the general perception of pop and indie pop music as being upbeat and positive.
+
+There seem to be no indie pop songs in the key of A# major and minor in the sample. Just like there are more songs in minor on the A, F# and E minor scale.
+
+### Novelty Functions
+
+```{r }
+
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+
+# Assuming you have the data for the two playlists stored in pop_df and indiepop_df
+
+pop_party <- get_and_analyze_playlist("37i9dQZF1DWXti3N4Wp5xy", "Pop Party")
+fresh_pop <- get_and_analyze_playlist("37i9dQZF1DX2fMaj5GfMh3", "Fresh Pop")
+
+indiepop <- get_and_analyze_playlist("37i9dQZF1DWWEcRhUVtL8n", "Indie Pop")
+diff_indie <- get_and_analyze_playlist("37i9dQZF1DXad2sxzzYX1N", "Indie That Hits Different")
+
+# Combine the data into one dataframe
+combined_df <- rbind(
+  data.frame(Playlist = "Pop Party", tempo = pop_party$tempo),
+  data.frame(Playlist = "Fresh Pop", tempo = fresh_pop$tempo),
+  data.frame(Playlist = "Indie Pop", tempo = indiepop$tempo),
+  data.frame(Playlist = "Indie That Hits Different", tempo = diff_indie$tempo)
+)
+
+# Create boxplot to compare tempo across playlists
+ggplot(combined_df, aes(x = Playlist, y = tempo, fill = Playlist)) +
+  geom_boxplot() +
+  labs(
+    title = "Comparison of Tempo Across Playlists",
+    x = "Playlist",
+    y = "Tempo"
+  ) +
+  scale_fill_manual(values = c("skyblue", "salmon", "green", "purple")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+***
+
+To see if these pop and indiepop playlists are that different from each other I decided to add two more playlists (Fresh Pop and Indie That Hits Different). It is interesting to see that the range of the two indie pop playlists is really similar and the two pop playlists are too. It seems like there is a correlation in this difference in the two genres. 
+Q1 and Q3 are in a wider range from each other in both playlists while in the Pop playlists they are closer to each other. 
+
+The Pop playlists have multiple outliers that are either around 175 or 80. It seems like this is the case since the average is closer to each other Q1 and Q3. In the next page there are Tempograms to see this better.
+
+### Tempogram Outliers In Pop Playlists
+
+```{r }
+drunktext <- get_tidy_audio_analysis("0KpWiHVmIFDTvai20likX4")
+alibi <- get_tidy_audio_analysis("4JyS3WGxalmpzgEbVyTycL")
+
+
+
+drunktext |>
+  tempogram(window_size = 8, hop_size = 1, cyclic = FALSE) |>
+  ggplot(aes(x = time, y = bpm, fill = power)) +
+  geom_raster() +
+  scale_fill_viridis_c(guide = "none") +
+  labs(title = "drunk text - Henry Moodie", x = "Time (s)", y = "Tempo (BPM)") +
+  theme_classic()
+
+alibi |>
+  tempogram(window_size = 8, hop_size = 1, cyclic = TRUE) |>
+  ggplot(aes(x = time, y = bpm, fill = power)) +
+  geom_raster() +
+  scale_fill_viridis_c(guide = "none") +
+  labs(title = "The Alibi - Dylan", x = "Time (s)", y = "Tempo (BPM)") +
+  theme_classic()
+
+
+
+```
+
+*** 
+
+In the boxplot analysis there were outliers in the Pop playlists. After analysing these playlists it was clear that they were indeed just outliers. The tempo of these songs are constant. Drunk text by Henry Moodie has a BPM of 186. 
+
+What can be the reason for these songs to be outliers is that songs are getting faster and 'pop' is getting faster by the time. This could be a good question for future research. 
+
+It is interesting to see that The Alibi even though Spotify sees it
 
 ### Conclusion & Discussion
 
 ```{r }
+print(pop_party)
 ```
