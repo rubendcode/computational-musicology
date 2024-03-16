@@ -245,25 +245,18 @@ sophie_timbre |>
 
 library(cowplot)
 
-# Define the dimensions of the plot
-plot_width <- 800
-plot_height <- 600
-
-# Define a theme with plot margin
-theme_with_margin <- theme(
-  plot.margin = margin(5, 5, 5, 5)
-)
-
 # Arrange the timbre graphs in a grid layout
 grid <- plot_grid(royelotis_timbre, sophie_timbre, ncol = 2)
 
 # Display the combined plot
 grid
+
+
 ```
 
 ------------------------------------------------------------------------
 
-These show that there is 'more' timbre in the original version from Sophie.
+These show that there is 'more' timbre in the original version from Sophie. This might be because the Royel Otis song was recorded as a live song while the original pop song was recorded in a proper studio. 
 
 ### Chordograms of Corpus
 
@@ -557,6 +550,7 @@ ggplot(combined_df, aes(x = Playlist, y = tempo, fill = Playlist)) +
 
 ```
 
+
 ***
 
 To see if these pop and indiepop playlists are that different from each other I decided to add two more playlists (Fresh Pop and Indie That Hits Different). It is interesting to see that the range of the two indie pop playlists is really similar and the two pop playlists are too. It seems like there is a correlation in this difference in the two genres. 
@@ -564,13 +558,54 @@ Q1 and Q3 are in a wider range from each other in both playlists while in the Po
 
 The Pop playlists have multiple outliers that are either around 175 or 80. It seems like this is the case since the average is closer to each other Q1 and Q3. In the next page there are Tempograms to see this better.
 
+### Time Signature in different playlists
+
+```{r }
+
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+
+# Assuming you have the data for the two playlists stored in pop_df and indiepop_df
+# I'll just create sample data for demonstration purposes
+
+pop_party <- get_and_analyze_playlist("37i9dQZF1DWXti3N4Wp5xy", "Pop Party")
+fresh_pop <- get_and_analyze_playlist("37i9dQZF1DX2fMaj5GfMh3", "Fresh Pop")
+indiepop <- get_and_analyze_playlist("37i9dQZF1DWWEcRhUVtL8n", "Indie Pop")
+diff_indie <- get_and_analyze_playlist("37i9dQZF1DXad2sxzzYX1N", "Indie That Hits Different")
+
+# Combine the data into one dataframe
+combined_df <- rbind(
+  data.frame(Playlist = "Pop Party", time_signature = pop_party$time_signature),
+  data.frame(Playlist = "Fresh Pop", time_signature = fresh_pop$time_signature),
+  data.frame(Playlist = "Indie Pop", time_signature = indiepop$time_signature),
+  data.frame(Playlist = "Indie That Hits Different", time_signature = diff_indie$time_signature)
+)
+
+# Create histogram to compare time signatures across playlists
+ggplot(combined_df, aes(x = time_signature, fill = Playlist)) +
+  geom_histogram(binwidth = 0.5, position = "dodge") +
+  labs(
+    title = "Comparison of Time Signatures Across Playlists",
+    x = "Time Signature",
+    y = "Count"
+  ) +
+  scale_fill_manual(values = c("skyblue", "salmon", "green", "purple")) +
+  theme_minimal()
+
+```
+*** 
+
+I wanted to see if there are big differences in time signatures within both genres. 
+There are a few more songs in 3/4 in indie pop then there are in pop playlists. 
+I would have expected this difference to be bigger.
+
 ### Tempogram Outliers In Pop Playlists
 
 ```{r }
 drunktext <- get_tidy_audio_analysis("0KpWiHVmIFDTvai20likX4")
 alibi <- get_tidy_audio_analysis("4JyS3WGxalmpzgEbVyTycL")
-
-
+blinding_lights <- get_tidy_audio_analysis("0VjIjW4GlUZAMYd2vXMi3b")
 
 drunktext |>
   tempogram(window_size = 8, hop_size = 1, cyclic = FALSE) |>
@@ -588,7 +623,13 @@ alibi |>
   labs(title = "The Alibi - Dylan", x = "Time (s)", y = "Tempo (BPM)") +
   theme_classic()
 
-
+blinding_lights |>
+  tempogram(window_size = 8, hop_size = 1, cyclic = FALSE) |>
+  ggplot(aes(x = time, y = bpm, fill = power)) +
+  geom_raster() +
+  scale_fill_viridis_c(guide = "none") +
+  labs(title = "Blinding Lights - The Weeknd", x = "Time (s)", y = "Tempo (BPM)") +
+  theme_classic()
 
 ```
 
@@ -598,10 +639,8 @@ In the boxplot analysis there were outliers in the Pop playlists. After analysin
 
 What can be the reason for these songs to be outliers is that songs are getting faster and 'pop' is getting faster by the time. This could be a good question for future research. 
 
-It is interesting to see that The Alibi even though Spotify sees it
 
 ### Conclusion & Discussion
 
 ```{r }
-print(pop_party)
 ```
