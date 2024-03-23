@@ -639,6 +639,93 @@ In the boxplot analysis there were outliers in the Pop playlists. After analysin
 
 What can be the reason for these songs to be outliers is that songs are getting faster and 'pop' is getting faster by the time. This could be a good question for future research. 
 
+### Classification and Clustering
+
+```{r }
+
+library(ggdendro)
+library(heatmaply)
+
+library(compmus)
+
+get_conf_mat <- function(fit) {
+  outcome <- .get_tune_outcome_names(fit)
+  fit |> 
+    collect_predictions() |> 
+    conf_mat(truth = outcome, estimate = .pred_class)
+}  
+
+get_pr <- function(fit) {
+  fit |> 
+    conf_mat_resampled() |> 
+    group_by(Prediction) |> mutate(precision = Freq / sum(Freq)) |> 
+    group_by(Truth) |> mutate(recall = Freq / sum(Freq)) |> 
+    ungroup() |> filter(Prediction == Truth) |> 
+    select(class = Prediction, precision, recall)
+}  
+
+oyster <-
+  get_playlist_audio_features("oystercollection", "37i9dQZF1DWWEcRhUVtL8n") |>
+  add_audio_analysis() |>
+  mutate(
+    segments = map2(segments, key, compmus_c_transpose),
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "mean", norm = "manhattan"
+      ),
+    timbre =
+      map(
+        segments,
+        compmus_summarise, timbre,
+        method = "mean"
+      )
+  ) |>
+  mutate(pitches = map(pitches, compmus_normalise, "clr")) |>
+  mutate_at(vars(pitches, timbre), map, bind_rows) |>
+  unnest(cols = c(pitches, timbre))
+
+# Select only 40 songs
+oyster <- slice(oyster, 1:40)
+
+oyster_juice <-
+  recipe(
+    track.name ~
+      danceability +
+      energy +
+      loudness +
+      acousticness +
+      instrumentalness +
+      valence +
+      tempo +
+      duration,
+    data = oyster
+  ) |>
+  step_center(all_predictors()) |>
+  step_scale(all_predictors()) |> 
+  # step_range(all_predictors()) |> 
+  prep(oyster |> mutate(track.name = str_trunc(track.name, 20))) |>
+  juice() |>
+  column_to_rownames("track.name")
+
+oyster_dist <- dist(oyster_juice, method = "euclidean")
+
+heatmaply(
+  oyster_juice,
+  hclustfun = hclust,
+  hclust_method = "average",  # Change for single, average, or complete linkage.
+  dist_method = "euclidean"
+)
+
+```
+
+*** 
+
+I did a random selection for clustering of 40 song of the Indie Pop playlist. 
+Not suprisingly loudness and energy are clustered together. 
+
+A song that stood out to me was is Jesus is dead that has a high instrumentalness and is alone in it's cluster. Even though indiepop songs are overall all high in instrumentalness the song gets picked up as high in instrumentalness. 
+
 
 ### Conclusion & Discussion
 
