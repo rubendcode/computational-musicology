@@ -710,13 +710,13 @@ A song that stood out to me was is Jesus is dead that has a high instrumentalnes
 
 In my project, I used a variety of methods to explore the unique qualities of indie pop music compared to mainstream pop. Using the Spotify API, I gathered data on songs' features like their energy, how acoustic they are, and their tempo. This allowed me to analyze the music deeply, beyond just listening.
 
-I created chordograms to understand the chords used in songs. This was fascinating because it showed how indie pop songs might use chords differently, making them sound unique. Similarly, looking at chromagrams helped me see the notes and keys that are more common in indie pop. Through cepstograms, I examined the timbre of songs, which is like looking at their color or texture in terms of sound.
+This project mainly looked at the differences of the pop song Murder On The Dancefloor and its cover. I created chordograms to understand the chords used in the song. Similarly, looking at chromagrams helped me see the notes and keys that are more common in indie pop. Through cepstograms, I examined the timbre of songs, which is like looking at their color or texture in terms of sound. Seeing the differences in the songs ended up being hard since the cover version was a live version. This does not seem to works as well to compare the original song.
 
 The Spotify API was crucial because it let me get detailed information about songs that you can't find just by listening. This included things like the song's tempo, how loud it is, and its mood (valence).
 
 One interesting finding was when I compared the tempo of songs in different playlists. Indie pop songs had a wider range of tempos, suggesting more variety in how they feel and move. On the other hand, mainstream pop songs tended to stick to a more narrow range of tempos.
 
-Looking at time signatures was another eye-opener. Indie pop songs were more likely to experiment with different time signatures, which can give a song an unusual rhythm or feel.
+Looking at time signatures was another eye-opener. Indie pop songs were more likely to use 3/4 time signatures, which can give a song an unusual rhythm or feel.
 
 For future research, I'm curious to dive deeper into how indie pop evolves. Are there trends in the genre that are becoming more popular? Also, I wonder how technological changes will affect indie pop music. With new tools and platforms, indie artists have more opportunities to experiment and share their music. It would be interesting to see how this shapes the genre.
 
