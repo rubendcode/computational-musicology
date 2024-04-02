@@ -2,3 +2,21 @@
   text-align: center;
   cursor: pointer;
 }
+
+h1 {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  /* Add any other styling you want */
+}
+
+h2 {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  /* Add any other styling you want */
+}
+
+h3 {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  /* Add any other styling you want */
+}

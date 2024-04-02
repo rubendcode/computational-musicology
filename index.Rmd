@@ -44,17 +44,24 @@ knitr::opts_chunk$set(cache = TRUE, cache.lazy = FALSE)
 
 ### Introduction
 
-When do we call a pop song an indiepop song? Last month, the famous 2000’s pop song ‘Murder on the Dancefloor’ by Sophie Ellis-Bextor has been rediscovered by TikTok after the movie Saltburn came out. The song was covered by ‘indie-pop’ duo Royel Otis. After the cover the song turned into a timeless indiepop song with sounds from the 2010’s. As a musician, myself heavily inspired by the indie-pop style I am more than interested to discover what musical components make a regular pop song differ from an indie-pop song that makes me and many others feel a certain nostalgic way. My corpus is genre-based but I plan to analyze artists, songs, playlists, and charts with this research question. I hope to be able to discover when Spotify recognizes songs within Spotify as ‘indie-pop’, ‘pop’, or maybe in some cases both. I am not sure how deep we can analyze the song's components (chords, scales etc.) or just the metadata around it. I plan to get the tracks from playlists as “Indie Pop”, “Indie Pop Hits” and “Pop Rising” curated by Spotify. As specific tracks I want to look at current “pop” hits such as “Flowers” by Miley Cyrus and “Greedy” by Tate McRae and current “indie pop” hits such as the Murder On The Dancefloor cover by Royel Otis and a classic as Kilby Girl by The Backseat Lovers.
+When do we call a pop song an indiepop song? In the beginning of 2024, the famous 2000’s pop song ‘[Murder On The Dancefloor](https://open.spotify.com/track/4tKGFmENO69tZR9ahgZu48?si=71cdf97637894cf9)’ by Sophie Ellis-Bextor has been rediscovered by TikTok after the movie Saltburn came out. The song was covered by ‘indie-pop’ duo [Royel Otis](https://open.spotify.com/track/1swz9stsbG1p34SJHJqiww?si=aedffd73d0e943d8). After the cover, the song turned into a timeless indiepop song with sounds from the 2010’s. As a musician, myself heavily inspired by the indie-pop style I am more than interested to discover what musical components make a regular pop song differ from an indie-pop song that makes me and many others feel a certain nostalgic way. 
+
+My corpus is genre-based but I plan to analyze artists, songs, playlists, and charts with this research question. I hope to be able to discover when Spotify recognizes songs within Spotify as ‘indie-pop’, ‘pop’, or maybe in some cases both. I am not sure how deep we can analyze the song's components (chords, scales etc.) or just the metadata around it. I plan to get the tracks from playlists as “Indie Pop”, “Indie Pop Hits” and “Pop Rising” curated by Spotify. Specific tracks I want to look at are current “pop” hits such as “[Flowers](https://open.spotify.com/track/7DSAEUvxU8FajXtRloy8M0?si=9ec9d7ad18204823)” by Miley Cyrus and “[Greedy](https://open.spotify.com/track/3rUGC1vUpkDG9CZFHMur1t?si=0cfe0fafb0964e81)” by Tate McRae and current “indie pop” hits such as the [Murder On The Dancefloor](https://open.spotify.com/track/1swz9stsbG1p34SJHJqiww?si=aedffd73d0e943d8) cover by Royel Otis and a classic as Kilby Girl by The Backseat Lovers.
+
+**How do indie-pop songs stand out from pop songs when we look at them through the Spotify API?** This question is at the heart of my study. I want to figure out what makes these two genres different.
 
 ------------------------------------------------------------------------
 
-This index will show multiple graphs and discussions about the difference in genre.
+This flexdashboard will show multiple graphs and discussions about the difference in genre.
 
 ### Energy vs Acousticness
 
-Week 7 assignment:
+How do Energy and Acousticness compare in Indiepop and Pop genres?
 
-For the first graphs I made 2 graphs with the energy on the X axis and the acousticness on the Y axis. I used an indie pop and pop party playlist with both graphs showing that indie pop is more acoustic and pop more energetic. These graphs already show an interesting contrast in the genres.
+For the first graphs I made 2 graphs with the energy on the X axis and the acousticness on the Y axis. 
+I chose these two variables since acousticness and energy are what in my mind differentiate the two genres. 
+
+I used the indie pop and the pop party playlist with both graphs showing that indie pop is in general more acoustic and pop more energetic. These two scatterplots are only representing two playlists so to properly see the difference I would need to add more playlists in my corpus. 
 
 ```{r echo=FALSE, out.width = '100%', fig.width = 4, fig.height = 6}
 library(tidyverse)
@@ -87,7 +94,7 @@ div(
 
 ------------------------------------------------------------------------
 
-For these graphs I used these playlists at the moment:
+For these graphs I used these playlists:
 
 ```{r echo=FALSE}
 library(htmltools)
@@ -159,102 +166,72 @@ grid
 
 ------------------------------------------------------------------------
 
-The chromagrams show that both tracks are in the same key. I think it is interesting to see that the E note is really present in the Royel Otis (indie) version and less in the version from Sophie. The C# is being played more (as a harmonic I assume) in the Sophie version.
+How do the chromagrams of an original pop song and an indiepop cover song differentiate?
 
-### Timbre Graphs
+The chromagrams show that both tracks are in the same key. I think it is interesting to see that the E note is really present in the Royel Otis (indie) version and less in the version from Sophie. The C# is being played more (as a harmonic I assume) in the Sophie version. 
+
+One of the biggest differences of the two songs is that the version of Sophie is a studio recording while the version from Royel Otis is live. There seem to be more harmonics in the Sophie version. The magnitude is higher in most notes in the Royel Otis version. I would expect there to be more magnitude in a well recorded studio version. This is something I want to look into further.
+
+### Cepstograms
 
 ```{r timbres, echo=FALSE}
-
-royelotis_timbre <-
-  get_tidy_audio_analysis("1swz9stsbG1p34SJHJqiww") |> # Change URI.
-  compmus_align(bars, segments) |>                     # Change `bars`
-  select(bars) |>                                      #   in all three
-  unnest(bars) |>                                      #   of these lines.
-  mutate(
-    pitches =
-      map(segments,
-        compmus_summarise, pitches,
-        method = "rms", norm = "euclidean"              # Change summary & norm.
-      )
-  ) |>
-  mutate(
-    timbre =
-      map(segments,
-        compmus_summarise, timbre,
-        method = "rms", norm = "euclidean"              # Change summary & norm.
-      )
-  )
-
-royelotis_timbre |>
-  compmus_self_similarity(timbre, "cosine") |> 
-  ggplot(
-    aes(
-      x = xstart + xduration / 2,
-      width = xduration,
-      y = ystart + yduration / 2,
-      height = yduration,
-      fill = d
-    )
-  ) +
-  geom_tile() +
-  labs(title = "Royel Otis Murder On The Dancefloor", x = "Time (s)", y = NULL, fill = "Magnitude") +
-  coord_fixed() +
-  scale_fill_viridis_c(guide = "none") +
-  theme_classic() +
-  labs(x = "", y = "")
-
-
-sophie_timbre <-
-  get_tidy_audio_analysis("4tKGFmENO69tZR9ahgZu48") |> # Change URI.
-  compmus_align(bars, segments) |>                     # Change `bars`
-  select(bars) |>                                      #   in all three
-  unnest(bars) |>                                      #   of these lines.
-  mutate(
-    pitches =
-      map(segments,
-        compmus_summarise, pitches,
-        method = "rms", norm = "euclidean"              # Change summary & norm.
-      )
-  ) |>
-  mutate(
-    timbre =
-      map(segments,
-        compmus_summarise, timbre,
-        method = "rms", norm = "euclidean"              # Change summary & norm.
-      )
-  )
-
-sophie_timbre |>
-  compmus_self_similarity(timbre, "cosine") |> 
-  ggplot(
-    aes(
-      x = xstart + xduration / 2,
-      width = xduration,
-      y = ystart + yduration / 2,
-      height = yduration,
-      fill = d
-    )
-  ) +
-  geom_tile() +
-  labs(title = "Sophie Ellis-Bextor Murder On The Dancefloor", x = "Time (s)", y = NULL, fill = "Magnitude") +
-  coord_fixed() +
-  scale_fill_viridis_c(guide = "none") +
-  theme_classic() +
-  labs(x = "", y = "")
-
-
 library(cowplot)
+library(compmus)
 
-# Arrange the timbre graphs in a grid layout
-grid <- plot_grid(royelotis_timbre, sophie_timbre, ncol = 2)
+# Define function to create cepstogram plot
+create_cepstogram_plot <- function(audio_uri, title) {
+  audio_data <- get_tidy_audio_analysis(audio_uri)
+  
+  cepstogram_data <- audio_data %>%
+    compmus_align(bars, segments) %>%
+    select(bars) %>%
+    unnest(bars) %>%
+    mutate(
+      pitches = map(segments, compmus_summarise, pitches, method = "rms", norm = "euclidean"),
+      timbre = map(segments, compmus_summarise, timbre, method = "rms", norm = "euclidean")
+    )
+  
+  cepstogram_plot <- cepstogram_data %>%
+    compmus_gather_timbre() %>%
+    ggplot(
+      aes(
+        x = start + duration / 2,
+        width = duration,
+        y = basis,
+        fill = value
+      )
+    ) +
+    geom_tile() +
+    labs(title = title, x = "Time (s)", y = NULL, fill = "Magnitude") +
+    scale_fill_viridis_c() +
+    theme_classic() +
+    theme(plot.title = element_text(size = 8))  # Adjust title size
+  
+  return(cepstogram_plot)
+}
 
-# Display the combined plot
-grid
+# Create cepstogram plots for Royel Otis and Sophie Ellis-Bextor
+royelotis_cepstogram_plot <- create_cepstogram_plot("1swz9stsbG1p34SJHJqiww", "Royel Otis Murder On The Dancefloor")
+sophie_cepstogram_plot <- create_cepstogram_plot("4tKGFmENO69tZR9ahgZu48", "Sophie Ellis-Bextor Murder On The Dancefloor")
+
+# Arrange the plots side by side with smaller scale
+cepstogram_grid <- plot_grid(
+  royelotis_cepstogram_plot + theme(plot.margin = margin(10, 10, 10, 10)),  # Adjust plot margin
+  sophie_cepstogram_plot + theme(plot.margin = margin(10, 10, 10, 10)),  # Adjust plot margin
+  ncol = 1, align = "h", scale = 1  # Arrange plots side by side with smaller scale
+)
+
+# Display the combined plot grid
+cepstogram_grid
 
 
 ```
 
 ------------------------------------------------------------------------
+
+How do the cepstograms of an original pop song and an indiepop cover song differentiate?
+
+For the next part of the analysis I decided to do a timbre analysis on both songs. I plotted two cepstograms where Sophie's version shows a more clear timbre outline. Instead of the Royel Otis version where only at the end there is a high magnitude. 
 
 These show that there is 'more' timbre in the original version from Sophie. This might be because the Royel Otis song was recorded as a live song while the original pop song was recorded in a proper studio. 
 
@@ -347,71 +324,68 @@ key_templates <-
     "D#:min", circshift(minor_key, 3)
   )
 
-royel_otis <-
-  get_tidy_audio_analysis("1swz9stsbG1p34SJHJqiww") |>
-  compmus_align(sections, segments) |>
-  select(sections) |>
-  unnest(sections) |>
-  mutate(
-    pitches =
-      map(segments,
-        compmus_summarise, pitches,
-        method = "mean", norm = "manhattan"
-      )
-  )
 
-royel_otis |> 
-  compmus_match_pitch_template(
-    chord_templates,         # Change to chord_templates if descired
-    method = "euclidean",  # Try different distance metrics
-    norm = "manhattan"     # Try different norms
-  ) |>
-  ggplot(
-    aes(x = start + duration / 2, width = duration, y = name, fill = d)
-  ) +
-  geom_tile() +
+# Function to create chordogram plots
+create_chordogram_plot <- function(audio_uri, title) {
+  audio_data <- get_tidy_audio_analysis(audio_uri)
+  
+  chord_data <- audio_data %>%
+    compmus_align(sections, segments) %>%
+    select(sections) %>%
+    unnest(sections) %>%
+    mutate(
+      pitches = map(segments, compmus_summarise, pitches, method = "mean", norm = "manhattan")
+    )
+  
+  chord_plot <- chord_data %>%
+    compmus_match_pitch_template(chord_templates, method = "euclidean", norm = "manhattan") %>%
+    ggplot(
+      aes(x = start + duration / 2, width = duration, y = name, fill = d)
+    ) +
     geom_tile() +
-  labs(title = "Chordogram Royel Otis Murder On The Dancefloor", x = "Time (s)", y = NULL, fill = "Magnitude") +
-  scale_fill_viridis_c(guide = "none") +
-  theme_minimal() +
-  labs(x = "Time (s)", y = "")
+    labs(title = title, x = "Time (s)", y = NULL, fill = "Magnitude") +
+    scale_fill_viridis_c(guide = "none") +
+    theme_minimal() +
+    labs(x = "Time (s)", y = "")
+  
+  return(chord_plot)
+}
 
-sophie <-
-  get_tidy_audio_analysis("4tKGFmENO69tZR9ahgZu48") |>
-  compmus_align(sections, segments) |>
-  select(sections) |>
-  unnest(sections) |>
-  mutate(
-    pitches =
-      map(segments,
-        compmus_summarise, pitches,
-        method = "mean", norm = "manhattan"
-      )
-  )
 
-sophie |> 
-  compmus_match_pitch_template(
-    chord_templates,         # Change to chord_templates if descired
-    method = "euclidean",  # Try different distance metrics
-    norm = "manhattan"     # Try different norms
-  ) |>
-  ggplot(
-    aes(x = start + duration / 2, width = duration, y = name, fill = d)
-  ) +
-  geom_tile() +
-  labs(title = "Chordogram Sophie Ellis-Bextor Murder On The Dancefloor", x = "Time (s)", y = NULL, fill = "Magnitude") +
-  scale_fill_viridis_c(guide = "none") +
-  theme_minimal() +
-  labs(x = "Time (s)", y = "")
+royel_otis_plot <- create_chordogram_plot("1swz9stsbG1p34SJHJqiww", "Royel Otis Murder On The Dancefloor")
+sophie_plot <- create_chordogram_plot("4tKGFmENO69tZR9ahgZu48", "Sophie Ellis-Bextor")
 
+royel_otis_plot <- royel_otis_plot + theme(
+  plot.margin = unit(c(1,1,1,1), "cm"), # Adjust margins (top, right, bottom, left)
+  text = element_text(size = 10) # Adjust text size
+)
+
+sophie_plot <- sophie_plot + theme(
+  plot.margin = unit(c(1,1,1,1), "cm"),
+  text = element_text(size = 10)
+)
+
+# Now, arrange the plots in a grid layout without overlapping
+chordogram_grid <- plot_grid(
+  royel_otis_plot, sophie_plot,
+  nrow = 1, align = "hv", scale = c(1, 1)
+)
+
+# Display the combined plot grid
+chordogram_grid
 
 ```
 
-------------------------------------------------------------------------
+***
 
-The chordogram is not able to recognise the chords in the indiepop song as well as in the pop song.
 
-### Playlist SD Comparisons
+How do the chords of an original pop song and an indiepop cover song differentiate?
+
+The chordogram is not able to recognise the chords in the indiepop song as well as in the pop song. 
+In the version of Sophie Ellis-Bextor there is a clear chord structure of chords in the intro and at the 175 second mark. It includes a clear view of Bbmaj and Gmin. At the end of the Royel Otis song there is last guitar strum that picks up the chordogram well. It is a Bbmaj chord but all chords in the scale get recognised. 
+
+
+### Playlist Key Comparisons
 
 ```{r}
 library(ggplot2)
@@ -439,8 +413,8 @@ extract_keys_and_modes <- function(audio_features) {
 }
 
 # Fetch audio features and analyze playlists for pop and indiepop
-pop <- get_and_analyze_playlist("37i9dQZF1DWXti3N4Wp5xy", "Pop")
-indiepop <- get_and_analyze_playlist("37i9dQZF1DWWEcRhUVtL8n", "Indie Pop")
+#pop <- get_and_analyze_playlist("37i9dQZF1DWXti3N4Wp5xy", "Pop")
+#indiepop <- get_and_analyze_playlist("37i9dQZF1DWWEcRhUVtL8n", "Indie Pop")
 
 # Extract keys and modes for each playlist
 pop_keys_modes <- extract_keys_and_modes(pop)
@@ -512,7 +486,7 @@ The chart for minor keys shows that A minor (Am) is the most frequent key in bot
 
 There seem to be no indie pop songs in the key of A# major and minor in the sample. Just like there are more songs in minor on the A, F# and E minor scale.
 
-### Novelty Functions
+### Boxplots of Tempo
 
 ```{r }
 
@@ -525,7 +499,7 @@ library(dplyr)
 pop_party <- get_and_analyze_playlist("37i9dQZF1DWXti3N4Wp5xy", "Pop Party")
 fresh_pop <- get_and_analyze_playlist("37i9dQZF1DX2fMaj5GfMh3", "Fresh Pop")
 
-indiepop <- get_and_analyze_playlist("37i9dQZF1DWWEcRhUVtL8n", "Indie Pop")
+#indiepop <- get_and_analyze_playlist("37i9dQZF1DWWEcRhUVtL8n", "Indie Pop")
 diff_indie <- get_and_analyze_playlist("37i9dQZF1DXad2sxzzYX1N", "Indie That Hits Different")
 
 # Combine the data into one dataframe
@@ -594,7 +568,8 @@ ggplot(combined_df, aes(x = time_signature, fill = Playlist)) +
   theme_minimal()
 
 ```
-*** 
+
+***
 
 I wanted to see if there are big differences in time signatures within both genres. 
 There are a few more songs in 3/4 in indie pop then there are in pop playlists. 
@@ -603,39 +578,42 @@ I would have expected this difference to be bigger.
 ### Tempogram Outliers In Pop Playlists
 
 ```{r }
+library(cowplot)
+
+# Load the audio analysis data
 drunktext <- get_tidy_audio_analysis("0KpWiHVmIFDTvai20likX4")
 alibi <- get_tidy_audio_analysis("4JyS3WGxalmpzgEbVyTycL")
 blinding_lights <- get_tidy_audio_analysis("0VjIjW4GlUZAMYd2vXMi3b")
 
-drunktext |>
-  tempogram(window_size = 8, hop_size = 1, cyclic = FALSE) |>
-  ggplot(aes(x = time, y = bpm, fill = power)) +
-  geom_raster() +
-  scale_fill_viridis_c(guide = "none") +
-  labs(title = "drunk text - Henry Moodie", x = "Time (s)", y = "Tempo (BPM)") +
-  theme_classic()
+# Function to create tempogram plot
+create_tempogram_plot <- function(data, title) {
+  data |>
+    tempogram(window_size = 8, hop_size = 1, cyclic = FALSE) |>
+    ggplot(aes(x = time, y = bpm, fill = power)) +
+    geom_raster() +
+    scale_fill_viridis_c(guide = "none") +
+    labs(title = title, x = "Time (s)", y = "Tempo (BPM)") +
+    theme_classic()
+}
 
-alibi |>
-  tempogram(window_size = 8, hop_size = 1, cyclic = TRUE) |>
-  ggplot(aes(x = time, y = bpm, fill = power)) +
-  geom_raster() +
-  scale_fill_viridis_c(guide = "none") +
-  labs(title = "The Alibi - Dylan", x = "Time (s)", y = "Tempo (BPM)") +
-  theme_classic()
+# Create tempogram plots
+plot_drunktext <- create_tempogram_plot(drunktext, "drunk text - Henry Moodie")
+plot_alibi <- create_tempogram_plot(alibi, "The Alibi - Dylan")
+plot_blinding_lights <- create_tempogram_plot(blinding_lights, "Blinding Lights - The Weeknd")
 
-blinding_lights |>
-  tempogram(window_size = 8, hop_size = 1, cyclic = FALSE) |>
-  ggplot(aes(x = time, y = bpm, fill = power)) +
-  geom_raster() +
-  scale_fill_viridis_c(guide = "none") +
-  labs(title = "Blinding Lights - The Weeknd", x = "Time (s)", y = "Tempo (BPM)") +
-  theme_classic()
+# Arrange the plots in a grid
+grid <- plot_grid(plot_drunktext, plot_alibi, plot_blinding_lights, nrow = 2)
+
+# Display the combined plot grid
+grid
+
 
 ```
 
 *** 
+How do the outliers of the tempo analysis compare with the real tempo in the tempograms?
 
-In the boxplot analysis there were outliers in the Pop playlists. After analysing these playlists it was clear that they were indeed just outliers. The tempo of these songs are constant. Drunk text by Henry Moodie has a BPM of 186. 
+In the boxplot analysis there were outliers in the Pop playlists. After analyzing these songs it was clear that they were indeed just outliers. The tempo of these songs are constant. Drunk text by Henry Moodie has a BPM of 186. 
 
 What can be the reason for these songs to be outliers is that songs are getting faster and 'pop' is getting faster by the time. This could be a good question for future research. 
 
@@ -720,8 +698,9 @@ heatmaply(
 ```
 
 *** 
+How do the songs in an indiepop playlist cluster together?
 
-I did a random selection for clustering of 40 song of the Indie Pop playlist. 
+I did a random selection for clustering of 40 song of the Indie Pop playlist. The dendrogram on the left shows how songs are grouped together based on similarity across these attributes. Clusters in a dendrogram indicate songs that are similar to each other in the context of the attributes included in the analysis.
 Not suprisingly loudness and energy are clustered together. 
 
 A song that stood out to me was is Jesus is dead that has a high instrumentalness and is alone in it's cluster. Even though indiepop songs are overall all high in instrumentalness the song gets picked up as high in instrumentalness. 
@@ -729,5 +708,16 @@ A song that stood out to me was is Jesus is dead that has a high instrumentalnes
 
 ### Conclusion & Discussion
 
-```{r }
-```
+In my project, I used a variety of methods to explore the unique qualities of indie pop music compared to mainstream pop. Using the Spotify API, I gathered data on songs' features like their energy, how acoustic they are, and their tempo. This allowed me to analyze the music deeply, beyond just listening.
+
+I created chordograms to understand the chords used in songs. This was fascinating because it showed how indie pop songs might use chords differently, making them sound unique. Similarly, looking at chromagrams helped me see the notes and keys that are more common in indie pop. Through cepstograms, I examined the timbre of songs, which is like looking at their color or texture in terms of sound.
+
+The Spotify API was crucial because it let me get detailed information about songs that you can't find just by listening. This included things like the song's tempo, how loud it is, and its mood (valence).
+
+One interesting finding was when I compared the tempo of songs in different playlists. Indie pop songs had a wider range of tempos, suggesting more variety in how they feel and move. On the other hand, mainstream pop songs tended to stick to a more narrow range of tempos.
+
+Looking at time signatures was another eye-opener. Indie pop songs were more likely to experiment with different time signatures, which can give a song an unusual rhythm or feel.
+
+For future research, I'm curious to dive deeper into how indie pop evolves. Are there trends in the genre that are becoming more popular? Also, I wonder how technological changes will affect indie pop music. With new tools and platforms, indie artists have more opportunities to experiment and share their music. It would be interesting to see how this shapes the genre.
+
+In summary, my project taught me a lot about the subtleties that make indie pop distinct from mainstream pop. By using data from the Spotify API and analyzing it with various methods, I've gained a richer understanding of what makes each genre unique. Looking ahead, I'm excited to see where indie pop will go and how it will continue to evolve.
